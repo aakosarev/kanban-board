@@ -130,8 +130,11 @@ function ColumnContainer(props: Props) {
                                 setEditMode(false);
                             }}
                             onKeyDown = {(e) => {
-                                if (e.key !== "Enter") return;
-                                setEditMode(false);
+                                if (e.key !== "Enter"){
+                                    return;
+                                } else {
+                                    setEditMode(false);
+                                }
                             }}
                         />
                         )

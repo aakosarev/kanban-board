@@ -158,6 +158,27 @@ function KanbanBoard() {
     }
 
     function updateTask(id: Id, content: string) {
+        const requestData = {
+            description: content,
+        };
+        axios.patch(`http://localhost:5007/api/v1/task/${id}/update_description`, requestData)
+            .then((response) => {
+                if (response.status === 200) {
+                    const newTasks = tasks.map(task => {
+                        if (task.id !== id){
+                            return task;
+                        }
+                        return {...task, content};
+                    });
+                    setTasks(newTasks);
+                } else {
+                    console.error('Неправильный статус ответа:', response.status);
+                }
+            })
+            .catch((error) => {
+                console.error('Ошибка при отправке запроса:', error);
+            });
+
         const newTasks = tasks.map(task => {
             if (task.id !== id){
                 return task;
@@ -174,7 +195,7 @@ function KanbanBoard() {
         };
         axios.post('http://localhost:5007/api/v1/column/create', requestData)
             .then((response) => {
-                if (response.status === 200) {
+                if (response.status === 201) {
                     const newColumn = {
                         id: response.data.id,
                         title: `Столбец ${columns.length + 1}`,
@@ -207,12 +228,13 @@ function KanbanBoard() {
             });
     }
 
-    /*function updateColumn(id:Id, title: string) {
+
+    function updateColumn(id:Id, title: string) {
         const requestData = {
             user_id: 1, //TODO hadrcode!!!
             name: title,
         };
-        axios.patch(`localhost:5007/api/v1/column/${id}/update_name`, requestData)
+        axios.patch(`http://localhost:5007/api/v1/column/${id}/update_name`, requestData)
             .then((response) => {
                 if (response.status === 200) {
                     const newColumns = columns.map((col) => {
@@ -227,15 +249,6 @@ function KanbanBoard() {
             .catch((error) => {
                 console.error('Ошибка при отправке запроса:', error);
             });
-    }*/
-
-    function updateColumn(id:Id, title: string) {
-        const newColumns = columns.map((col) => {
-            if (col.id !== id) return col;
-            return {...col, title };
-        });
-
-        setColumns(newColumns);
     }
 
     function onDragonStart(event: DragStartEvent){
