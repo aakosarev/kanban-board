@@ -2,6 +2,9 @@ import PlusIcon from "../icons/PlusIcon.tsx";
 import {useMemo, useState} from "react";
 import {Column, Id, Task} from "../types.ts";
 import ColumnContainer from "./ColumnContainer.tsx";
+import axios from 'axios';
+
+
 import {
     DndContext,
     DragEndEvent, DragOverEvent,
@@ -115,19 +118,45 @@ function KanbanBoard() {
     );
 
     function createNewTask(columnId: Id) {
-        const newTask: Task = {
-            id: generateId(),
-            columnId,
-            content: `Задача ${tasks.length + 1}`
-        }
-
-        setTasks([...tasks, newTask]);
+        const  description = `Задача ${tasks.length + 1}`
+        const requestData = {
+            column_id: columnId,
+            description: description,
+        };
+        console.log(123)
+        axios.post('http://localhost:5007/api/v1/task/create', requestData)
+            .then((response) => {
+                if (response.status === 201) {
+                    const newTask: Task = {
+                        id: response.data.id,
+                        columnId,
+                        content: description
+                    }
+                    setTasks([...tasks, newTask]);
+                } else {
+                    console.error('Неправильный статус ответа:', response.status);
+                }
+            })
+            .catch((error) => {
+                console.error('Ошибка при отправке запроса:', error);
+            });
     }
 
     function deleteTask(id: Id) {
-        const newTasks = tasks.filter(task => task.id !== id);
-        setTasks(newTasks);
+        axios.delete(`http://localhost:5007/api/v1/task/${id}`)
+            .then((response) => {
+                if (response.status === 200) {
+                    const newTasks = tasks.filter(task => task.id !== id);
+                    setTasks(newTasks);
+                } else {
+                    console.error('Неправильный статус ответа:', response.status);
+                }
+            })
+            .catch((error) => {
+                console.error('Ошибка при отправке запроса:', error);
+            });
     }
+
     function updateTask(id: Id, content: string) {
         const newTasks = tasks.map(task => {
             if (task.id !== id){
@@ -139,23 +168,66 @@ function KanbanBoard() {
         setTasks(newTasks);
     }
 
-
-    function createNewColumn(){
-        const columnToAdd: Column = {
-            id: generateId(),
-            title: `Столбец ${columns.length + 1}`,
+    function createNewColumn(){ //TODO принимать user_id...или сделать user_id глобально
+        const requestData = {
+            user_id: 1, //TODO hadrcode!!!
         };
-
-        setColumns([...columns, columnToAdd]);
+        axios.post('http://localhost:5007/api/v1/column/create', requestData)
+            .then((response) => {
+                if (response.status === 200) {
+                    const newColumn = {
+                        id: response.data.id,
+                        title: `Столбец ${columns.length + 1}`,
+                    };
+                    setColumns([...columns, newColumn]);
+                } else {
+                    console.error('Неправильный статус ответа:', response.status);
+                }
+            })
+            .catch((error) => {
+                console.error('Ошибка при отправке запроса:', error);
+            });
     }
 
     function deleteColumn(id: Id){
-       const filteredColumns = columns.filter(col => col.id !== id);
-       setColumns(filteredColumns);
+        axios.delete(`http://localhost:5007/api/v1/column/${id}`)
+            .then((response) => {
+                if (response.status === 200) {
+                    const filteredColumns = columns.filter(col => col.id !== id);
+                    setColumns(filteredColumns);
 
-       const newTasks = tasks.filter(t => t.columnId !== id);
-       setTasks(newTasks);
+                    const newTasks = tasks.filter(t => t.columnId !== id);
+                    setTasks(newTasks);
+                } else {
+                    console.error('Неправильный статус ответа:', response.status);
+                }
+            })
+            .catch((error) => {
+                console.error('Ошибка при отправке запроса:', error);
+            });
     }
+
+    /*function updateColumn(id:Id, title: string) {
+        const requestData = {
+            user_id: 1, //TODO hadrcode!!!
+            name: title,
+        };
+        axios.patch(`localhost:5007/api/v1/column/${id}/update_name`, requestData)
+            .then((response) => {
+                if (response.status === 200) {
+                    const newColumns = columns.map((col) => {
+                        if (col.id !== id) return col;
+                        return {...col, title };
+                    });
+                    setColumns(newColumns);
+                } else {
+                    console.error('Неправильный статус ответа:', response.status);
+                }
+            })
+            .catch((error) => {
+                console.error('Ошибка при отправке запроса:', error);
+            });
+    }*/
 
     function updateColumn(id:Id, title: string) {
         const newColumns = columns.map((col) => {
@@ -248,10 +320,5 @@ function KanbanBoard() {
 
     }
 }
-
-function generateId(){
-    return Math.floor(Math.random() * 10001);
-}
-
 
 export default KanbanBoard
