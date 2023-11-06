@@ -1,0 +1,44 @@
+serviceName: kanban_service
+
+http:
+  port: :5007
+  development: true
+  basePath: /api/v1
+  authPath: /api/v1/auth
+  columnPath: /api/v1/column
+  taskPath: /api/v1/task
+  boardPath: /api/v1/board
+  debugErrorsResponse: true
+
+cookie:
+  maxAge: 86400
+  secure: false
+  httpOnly: true
+
+session:
+  name: session-id
+  prefix: api-session
+  expire: 3600
+
+postgres:
+  host: localhost
+  port: 5432
+  username: postgres
+  password: postgres
+  database: kanban
+
+redis:
+  redisAddr: localhost:6379
+  redisPassword:
+  redisDB: 0
+  redisDefaultDB: 0
+  minIdleConns: 200
+  poolSize: 12000
+  poolTimeout: 240
+  password: ""
+  db: 0
+
+logger:
+  level: debug
+  devMode: false
+  encoder: console
