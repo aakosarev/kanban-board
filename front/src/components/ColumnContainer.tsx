@@ -67,7 +67,6 @@ function ColumnContainer(props: Props) {
         );
     }
 
-
     return (
         <div
             ref = {setNodeRef}

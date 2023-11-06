@@ -322,6 +322,18 @@ function KanbanBoard() {
 
         //2)  Dropping a Task over a column
         if (isActiveATask && isOverAColumn) {
+            const requestData = {
+                column_id: overId,
+            };
+            axios.patch(`http://localhost:5007/api/v1/task/${activeId}/update_column_id`, requestData)
+                .then((response) => {
+                    if (response.status !== 200) {
+                        console.error('Неправильный статус ответа:', response.status);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Ошибка при отправке запроса:', error);
+                });
             setTasks(tasks => {
                 const activeIndex = tasks.findIndex((t) => t.id === activeId);
 
