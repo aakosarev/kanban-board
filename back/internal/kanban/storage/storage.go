@@ -143,10 +143,16 @@ func (k *KanbanStorage) ChangeColumnIDTask(ctx context.Context, task *models.Tas
 
 func (k *KanbanStorage) GetKanbanBoardByUserID(ctx context.Context, userID int) (*models.Board, error) {
 	query := `
-		SELECT "column".id AS column_id, "column".name AS column_name, "task".id AS task_id, "task".description AS task_description
+		SELECT 
+		    "column".id AS column_id, 
+		    "column".name AS column_name,
+		    "task".id AS task_id,
+		    "task".column_id AS task_column_id,
+		    "task".description AS task_description
 		FROM "column"
 		LEFT JOIN "task" ON "column".id = "task".column_id
 		WHERE "column".user_id = $1
+		ORDER BY column_id;
 	`
 
 	rows, err := k.client.Query(ctx, query, userID)
@@ -160,9 +166,9 @@ func (k *KanbanStorage) GetKanbanBoardByUserID(ctx context.Context, userID int) 
 
 	for rows.Next() {
 		k.log.Debug(1)
-		var colID, taskID sql.NullInt32
+		var colID, taskID, taskColumnID sql.NullInt32
 		var colName, taskDesc sql.NullString
-		if err := rows.Scan(&colID, &colName, &taskID, &taskDesc); err != nil {
+		if err := rows.Scan(&colID, &colName, &taskID, &taskColumnID, &taskDesc); err != nil {
 			return nil, errors.Wrap(err, "KanbanStorage.GetKanbanBoardByUserID.Scan")
 		}
 		col, exists := columnsMap[colID.Int32]
@@ -177,6 +183,7 @@ func (k *KanbanStorage) GetKanbanBoardByUserID(ctx context.Context, userID int) 
 
 		task := models.T{
 			ID:          int(taskID.Int32),
+			ColumnID:    int(taskColumnID.Int32),
 			Description: taskDesc.String,
 		}
 		col.Tasks = append(col.Tasks, &task)

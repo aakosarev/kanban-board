@@ -12,5 +12,6 @@ type Col struct {
 
 type T struct {
 	ID          int    `json:"id"`
+	ColumnID    int    `json:"column_id"`
 	Description string `json:"description"`
 }

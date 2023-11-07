@@ -49,9 +49,9 @@ function KanbanBoard() {
                             }));
 
                             const parsedTasks: Task[] = response.data.columns.reduce((acc: Task[], column: any) => {
-                                const tasks = column.tasks.filter((task: any) => task.id !== 0).map((task: any) => ({
+                                const tasks = column.tasks.filter((task: Task) => task.id !== 0).map((task: any) => ({
                                     id: task.id,
-                                    columnId: column.id,
+                                    columnId: task.column_id,
                                     content: task.description,
                                 }));
                                 return acc.concat(tasks);
