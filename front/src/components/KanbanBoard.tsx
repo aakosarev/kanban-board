@@ -1,5 +1,5 @@
 import PlusIcon from "../icons/PlusIcon.tsx";
-import {useMemo, useState} from "react";
+import {useMemo, useState, useEffect} from "react";
 import {Column, Id, Task} from "../types.ts";
 import ColumnContainer from "./ColumnContainer.tsx";
 import axios from 'axios';
@@ -34,6 +34,42 @@ function KanbanBoard() {
                 distance: 3 // 3px before move
          }
         }));
+
+    useEffect(() => {
+        const fetchInitialData = async () => {
+            await axios.get('http://localhost:5007/api/v1/board/1')
+                .then((response) => {
+                    if (response.status === 200) {
+                        console.log(response.data.columns)
+                        if (response.data.columns !== null){
+
+                            const parsedColumns: Column[] = response.data.columns.map((column: any) => ({
+                                id: column.id,
+                                title: column.name,
+                            }));
+
+                            const parsedTasks: Task[] = response.data.columns.reduce((acc: Task[], column: any) => {
+                                const tasks = column.tasks.filter((task: any) => task.id !== 0).map((task: any) => ({
+                                    id: task.id,
+                                    columnId: column.id,
+                                    content: task.description,
+                                }));
+                                return acc.concat(tasks);
+                            }, []);
+
+                            setColumns(parsedColumns);
+                            setTasks(parsedTasks);
+                        }
+                    } else {
+                        console.error('Неправильный статус ответа:', response.status);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Ошибка при отправке запроса:', error);
+                });
+        };
+        fetchInitialData();
+    }, []);
 
     return (
         <div
@@ -190,15 +226,17 @@ function KanbanBoard() {
     }
 
     function createNewColumn(){ //TODO принимать user_id...или сделать user_id глобально
+        const  name = `Столбец ${columns.length + 1}`
         const requestData = {
             user_id: 1, //TODO hadrcode!!!
+            name: name,
         };
         axios.post('http://localhost:5007/api/v1/column/create', requestData)
             .then((response) => {
                 if (response.status === 201) {
                     const newColumn = {
                         id: response.data.id,
-                        title: `Столбец ${columns.length + 1}`,
+                        title: name,
                     };
                     setColumns([...columns, newColumn]);
                 } else {

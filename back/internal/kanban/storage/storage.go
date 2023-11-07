@@ -145,7 +145,7 @@ func (k *KanbanStorage) GetKanbanBoardByUserID(ctx context.Context, userID int) 
 	query := `
 		SELECT "column".id AS column_id, "column".name AS column_name, "task".id AS task_id, "task".description AS task_description
 		FROM "column"
-		JOIN "task" ON "column".id = "task".column_id
+		LEFT JOIN "task" ON "column".id = "task".column_id
 		WHERE "column".user_id = $1
 	`
 
@@ -156,31 +156,32 @@ func (k *KanbanStorage) GetKanbanBoardByUserID(ctx context.Context, userID int) 
 	defer rows.Close()
 
 	b := models.Board{}
-	columnsMap := make(map[int]*models.Col)
+	columnsMap := make(map[int32]*models.Col)
 
 	for rows.Next() {
-		var colID, taskID int
-		var colName, taskDesc string
+		k.log.Debug(1)
+		var colID, taskID sql.NullInt32
+		var colName, taskDesc sql.NullString
 		if err := rows.Scan(&colID, &colName, &taskID, &taskDesc); err != nil {
 			return nil, errors.Wrap(err, "KanbanStorage.GetKanbanBoardByUserID.Scan")
 		}
-
-		col, exists := columnsMap[colID]
+		col, exists := columnsMap[colID.Int32]
 		if !exists {
 			col = &models.Col{
-				ID:   colID,
-				Name: colName,
+				ID:   int(colID.Int32),
+				Name: colName.String,
 			}
-			columnsMap[colID] = col
+			columnsMap[colID.Int32] = col
 			b.Columns = append(b.Columns, col)
 		}
 
 		task := models.T{
-			ID:          taskID,
-			Description: taskDesc,
+			ID:          int(taskID.Int32),
+			Description: taskDesc.String,
 		}
 		col.Tasks = append(col.Tasks, &task)
 
 	}
+	k.log.Debug(b)
 	return &b, nil
 }
